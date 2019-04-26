@@ -25,6 +25,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/odeint.hpp>
 
+#include <iostream>
 
 using namespace RevBayesCore;
 
@@ -1027,16 +1028,19 @@ void StateDependentSpeciationExtinctionProcess::drawStochasticCharacterMap(std::
     character_histories[node_index] = simmap_string;
     
     // recurse towards tips
-    recursivelyDrawStochasticCharacterMap(left, l, character_histories, set_amb_char_data);
-    recursivelyDrawStochasticCharacterMap(right, r, character_histories, set_amb_char_data);
+    try {
+	recursivelyDrawStochasticCharacterMap(left, l, character_histories, set_amb_char_data);
+	recursivelyDrawStochasticCharacterMap(right, r, character_histories, set_amb_char_data);
+	Tree t = Tree(*value);
+	t.clearNodeParameters();
+	t.addNodeParameter( "character_history", character_histories, false );
+	simmap = t.getSimmapNewickRepresentation();
+	// turn off sampling until we need it again
+	sample_character_history = false;
 
-    Tree t = Tree(*value);
-    t.clearNodeParameters();
-    t.addNodeParameter( "character_history", character_histories, false );
-    simmap = t.getSimmapNewickRepresentation();
-    
-    // turn off sampling until we need it again
-    sample_character_history = false;
+    } catch (const char* msg) {
+	cerr << msg << endl;
+    }
 
 }
 
@@ -1098,9 +1102,10 @@ void StateDependentSpeciationExtinctionProcess::recursivelyDrawStochasticCharact
         }
         if ( probs_sum == 0.0 )
         {
-            RandomNumberGenerator* rng = GLOBAL_RNG;
-            double u = rng->uniform01() * num_states;
-            new_state = size_t(u);
+            // RandomNumberGenerator* rng = GLOBAL_RNG;
+            // double u = rng->uniform01() * num_states;
+            // new_state = size_t(u);
+	    throw "zero probability of any state";
         }
         else
         {
@@ -1387,6 +1392,7 @@ void StateDependentSpeciationExtinctionProcess::recursivelyDrawStochasticCharact
         recursivelyDrawStochasticCharacterMap(left, l, character_histories, set_amb_char_data);
         recursivelyDrawStochasticCharacterMap(right, r, character_histories, set_amb_char_data);
     }
+    //cout << " end" << endl;
 }
 
 
@@ -1704,6 +1710,7 @@ void StateDependentSpeciationExtinctionProcess::redrawValue( void )
             {
                 std::vector<std::string*> character_histories(num_nodes);
                 drawStochasticCharacterMap(character_histories, true);
+                //cout << "finished drawStochasticCharacterMap" << endl;
             }
             static_cast<TreeDiscreteCharacterData*>(this->value)->setTimeInStates(time_in_states);
 
@@ -1717,6 +1724,8 @@ void StateDependentSpeciationExtinctionProcess::redrawValue( void )
         {
             success = simulateTree(attempts);
         }
+
+	//cout << "success: " << success << endl;
 
         if (success == true)
         {
@@ -1859,6 +1868,7 @@ void StateDependentSpeciationExtinctionProcess::setNumberOfTimeSlices( double n 
  */
 void StateDependentSpeciationExtinctionProcess::setValue(Tree *v, bool f )
 {
+    //cout << "start setValue" << endl;
     if (v->isBinary() == false)
     {
         throw RbException("The character-dependent birth death process is only implemented for binary trees.");
@@ -1912,6 +1922,7 @@ void StateDependentSpeciationExtinctionProcess::setValue(Tree *v, bool f )
         drawStochasticCharacterMap(character_histories);
     }
     static_cast<TreeDiscreteCharacterData*>(this->value)->setTimeInStates(time_in_states);
+    //cout << "finished setValue" << endl;
 }
 
 
@@ -2453,6 +2464,9 @@ bool StateDependentSpeciationExtinctionProcess::simulateTree( size_t attempts )
     // initialize the root node
     TopologyNode* root = new TopologyNode(0);
     double t = process_age->getValue();
+
+    //cout << "condition_on_num_tips: " << condition_on_num_tips << endl;
+
     if (condition_on_num_tips == true)
     {
         t = 0.0;
