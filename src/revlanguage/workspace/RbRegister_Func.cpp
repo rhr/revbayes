@@ -79,10 +79,12 @@
 
 
 /* Functions related to evolution (in folder "functions/phylogenetics") */
+#include "Func_BirthDeathSimulator.h"
 #include "Func_branchScoreDistance.h"
 #include "Func_checkNodeOrderConstraints.h"
 #include "Func_computeWeightedNodeOrderConstraintsScore.h"
 #include "Func_concatenate.h"
+#include "Func_concatenateContinuousCharacterData.h"
 #include "Func_CladeSpecificHierarchicalBranchRate.h"
 #include "Func_concatenateFromVector.h"
 #include "Func_constructRootedTripletDistribution.h"
@@ -350,10 +352,12 @@ void RevLanguage::Workspace::initializeFuncGlobalWorkspace(void)
         addFunction( new Func_SampledCladogenesisRootFrequencies() );
 
 		/* Functions related to phylogenetic trees (in folder "functions/phylogenetics/tree") */
+        addFunction( new Func_BirthDeathSimulator()                             );
         addFunction( new Func_branchScoreDistance()                             );
         addFunction( new Func_checkNodeOrderConstraints()                       );
         addFunction( new Func_computeWeightedNodeOrderConstraintsScore()        );
         addFunction( new Func_concatenate()                                     );
+        addFunction( new Func_concatenateContinuousCharacterData()              );
         addFunction( new Func_concatenateFromVector()                           );
         addFunction( new Func_constructRootedTripletDistribution()              );
         addFunction( new Func_formatDiscreteCharacterData()                     );
