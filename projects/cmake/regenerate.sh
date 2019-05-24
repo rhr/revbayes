@@ -1,5 +1,6 @@
 #!/bin/sh
-HERE=$(pwd)/build
+HERE="$(pwd)/build"
+mkdir -p "${HERE}"
 echo $HERE
 
 #################
@@ -10,15 +11,16 @@ debug="false"
 mac="false"
 win="false"
 mpi="false"
+gentoo="false"
 help="false"
 jupyter="false"
 
 # parse command line arguments
 while echo $1 | grep ^- > /dev/null; do
-# intercept help while parsing "-key value" pairs
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]
-then
-echo '
+    # intercept help while parsing "-key value" pairs
+    if [ "$1" = "--help" ] || [ "$1" = "-h" ]
+    then
+        echo '
 The minimum steps to build RevBayes after running this script is:
 cmake .
 make
@@ -33,13 +35,13 @@ Command line options are:
 '
 # secret test option
 # -jupyter        <true|false>    : set to true if you want ot buikd the jupyter version. Defaults to false.
-exit
-fi
+        exit
+    fi
 
-# parse pairs
-eval $( echo $1 | sed 's/-//g' | tr -d '\012')=$2
-shift
-shift
+    # parse pairs
+    eval $( echo $1 | sed 's/-//g' | tr -d '\012')=$2
+    shift
+    shift
 done
 
 
@@ -49,27 +51,31 @@ done
 
 if [ "$boost" = "true" ]
 then
-echo 'Building boost libraries'
-echo 'you can turn this off with argument "-boost false"'
+    echo 'Building boost libraries'
+    echo 'you can turn this off with argument "-boost false"'
 
-cd ../../boost_1_60_0
-rm ./project-config.jam*  # clean up from previous runs
+    cd ../../boost_1_60_0
+    rm ./project-config.jam*  # clean up from previous runs
 
-if [ "$mac" = "true" ]
-then
-./bootstrap.sh --with-libraries=atomic,chrono,filesystem,system,regex,thread,date_time,program_options,math,serialization,signals
-./b2 link=static
-elif [ "$win" = "true" ]
-then
-./bootstrap.sh --with-libraries=atomic,chrono,filesystem,system,regex,thread,date_time,program_options,math,serialization,signals --with-toolset=mingw
-./b2 link=static
+    if [ "$mac" = "true" ]
+    then
+        ./bootstrap.sh --with-libraries=atomic,chrono,filesystem,system,regex,thread,date_time,program_options,math,serialization,signals
+        ./b2 link=static
+    elif [ "$win" = "true" ]
+    then
+        ./bootstrap.sh --with-libraries=atomic,chrono,filesystem,system,regex,thread,date_time,program_options,math,serialization,signals --with-toolset=mingw
+        ./b2 link=static
+    elif [ "$gentoo" = "true" ]
+    then
+        ./bootstrap.sh --with-libraries=atomic,chrono,filesystem,system,regex,thread,date_time,program_options,math,serialization,signals
+        ./b2 link=static --ignore-site-config
+    else
+        ./bootstrap.sh --with-libraries=atomic,chrono,filesystem,system,regex,thread,date_time,program_options,math,serialization,signals
+        ./b2 link=static
+    fi
+
 else
-./bootstrap.sh --with-libraries=atomic,chrono,filesystem,system,regex,thread,date_time,program_options,math,serialization,signals
-./b2 link=static
-fi
-
-else
-echo 'not building boost libraries'
+    echo 'not building boost libraries'
 fi
 
 
@@ -103,7 +109,7 @@ echo '
 # We should ultimiately remove -Wno-reorder -Wno-unused-variable -Wno-unused-but-set-variable
 # But there are so many of them we cant see the really bad warnings.
 # So, disable those warnings for now.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -msse -msse2 -msse3 -Wno-sign-compare -Wno-reorder -Wno-unused-variable -Wno-unused-but-set-variable")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -msse -msse2 -msse3")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -Wall")
 '  >> "$HERE/CMakeLists.txt"
 elif [ "$mac" = "true" ]
@@ -134,8 +140,8 @@ add_definitions(-DRB_MPI)
 # Require MPI for this project:
 find_package(MPI REQUIRED)
 include_directories(${MPI_INCLUDE_PATH})
-set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
-set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+set(CMAKE_CXX_COMPILE_FLAGS "${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS}")
+set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS}")
 '  >> "$HERE/CMakeLists.txt"
 fi
 
@@ -162,12 +168,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake ${CMAKE_MODULE_PATH})
 # Set source root relate to project file
 set(PROJECT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/../../../src)
 
+option(INTERNAL_BOOST "Use the version of boost shipped with revbayes" ON)
 
+if (INTERNAL_BOOST)
+   SET(BOOST_ROOT "../../../boost_1_60_0")
+   SET(BOOST_LIBRARY "../../../boost_1_60_0/stage/lib")
+   SET(Boost_NO_SYSTEM_PATHS ON)
+   SET(Boost_USE_STATIC_RUNTIME ON)
+   SET(Boost_USE_STATIC_LIBS ON)
+endif()
 
-SET(BOOST_ROOT ../../../boost_1_60_0)
-SET(BOOST_LIBRARY ../../../boost_1_60_0/stage/lib)
-SET(Boost_USE_STATIC_RUNTIME true)
-SET(Boost_USE_STATIC_LIBS ON)
 find_package(Boost
 1.60.0
 COMPONENTS regex
@@ -212,6 +222,7 @@ fi
 
 if [ "$mpi" = "true" ]
 then
+echo "set executable"
 echo '
 add_executable(rb-mpi ${PROJECT_SOURCE_DIR}/revlanguage/main.cpp)
 

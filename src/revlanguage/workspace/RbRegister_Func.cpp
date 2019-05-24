@@ -79,10 +79,12 @@
 
 
 /* Functions related to evolution (in folder "functions/phylogenetics") */
+#include "Func_BirthDeathSimulator.h"
 #include "Func_branchScoreDistance.h"
 #include "Func_checkNodeOrderConstraints.h"
 #include "Func_computeWeightedNodeOrderConstraintsScore.h"
 #include "Func_concatenate.h"
+#include "Func_concatenateContinuousCharacterData.h"
 #include "Func_CladeSpecificHierarchicalBranchRate.h"
 #include "Func_concatenateFromVector.h"
 #include "Func_constructRootedTripletDistribution.h"
@@ -95,7 +97,7 @@
 #include "Func_phyloDiversity.h"
 #include "Func_PhylogeneticIndependentContrasts.h"
 #include "Func_PhylogeneticIndependentContrastsMultiSample.h"
-#include "Func_pomoStateConverter.h"
+#include "Func_pomoState4Converter.h"
 #include "Func_pomoRootFrequencies.h"
 #include "Func_readPomoCountFile.h"
 #include "Func_pruneTree.h"
@@ -168,6 +170,7 @@
 
 
 /* Cladogeneic state prob function */
+#include "Func_biogeographyCladoEventsBD.h"
 #include "Func_DECCladoProbs.h"
 #include "Func_DECRates.h"
 #include "Func_DECRoot.h"
@@ -256,6 +259,7 @@
 
 /* Statistics functions (in folder "functions/statistics") */
 /* These are functions related to statistical distributions */
+#include "Func_assembleContinuousMRF.h"
 #include "Func_discretizeBeta.h"
 #include "Func_discretizeBetaQuadrature.h"
 #include "Func_discretizeGamma.h"
@@ -338,6 +342,7 @@ void RevLanguage::Workspace::initializeFuncGlobalWorkspace(void)
         addFunction( new Func_DECRates() );
         addFunction( new Func_DECRoot() );
         addFunction( new Func_EpochCladoProbs() );
+        addFunction( new Func_biogeographyCladoEventsBD() );
         addFunction( new Func_chromosomesCladoProbs() );
         addFunction( new Func_chromosomesCladoEventsBD() );
         addFunction( new Func_chromosomesPloidyCladoEventsBD() );
@@ -347,10 +352,12 @@ void RevLanguage::Workspace::initializeFuncGlobalWorkspace(void)
         addFunction( new Func_SampledCladogenesisRootFrequencies() );
 
 		/* Functions related to phylogenetic trees (in folder "functions/phylogenetics/tree") */
+        addFunction( new Func_BirthDeathSimulator()                             );
         addFunction( new Func_branchScoreDistance()                             );
         addFunction( new Func_checkNodeOrderConstraints()                       );
         addFunction( new Func_computeWeightedNodeOrderConstraintsScore()        );
         addFunction( new Func_concatenate()                                     );
+        addFunction( new Func_concatenateContinuousCharacterData()              );
         addFunction( new Func_concatenateFromVector()                           );
         addFunction( new Func_constructRootedTripletDistribution()              );
         addFunction( new Func_formatDiscreteCharacterData()                     );
@@ -362,7 +369,7 @@ void RevLanguage::Workspace::initializeFuncGlobalWorkspace(void)
         addFunction( new Func_phyloDiversity()                                  );
         addFunction( new Func_PhylogeneticIndependentContrasts()                );
         addFunction( new Func_PhylogeneticIndependentContrastsMultiSample()     );
-        addFunction( new Func_pomoStateConverter()                              );
+        addFunction( new Func_pomoState4Converter()                              );
         addFunction( new Func_pomoRootFrequencies()                             );
         addFunction( new Func_pruneTree()                                       );
         addFunction( new Func_readPomoCountFile()                               );
@@ -424,7 +431,7 @@ void RevLanguage::Workspace::initializeFuncGlobalWorkspace(void)
 
         // log function
         addFunction( new Func_log()  );
-        
+
         // matrix function (converts into MatrixReal)
         addFunction( new Func_matrix() );
 
@@ -434,7 +441,7 @@ void RevLanguage::Workspace::initializeFuncGlobalWorkspace(void)
         // mean function
         addFunction( new Func_mean()  );
         addFunction( new Func_meanPositive()  );
-        
+
         // median function
         addFunction( new Func_median()  );
 
@@ -475,7 +482,7 @@ void RevLanguage::Workspace::initializeFuncGlobalWorkspace(void)
         // geographical distance function
         addFunction( new Func_geographicalDistance() );
         addFunction( new Func_shortestDistance() );
-        
+
                 // hyperbolic tangent function
         addFunction( new Func_hyperbolicTangent() );
 
@@ -488,7 +495,7 @@ void RevLanguage::Workspace::initializeFuncGlobalWorkspace(void)
 
         // upper triangle of a matrix function
         addFunction( new Func_upperTriangle()  );
-        
+
         // variance function
         addFunction( new Func_variance()  );
 
@@ -497,12 +504,15 @@ void RevLanguage::Workspace::initializeFuncGlobalWorkspace(void)
 
         // get ln Probability function
         addFunction( new Func_lnProbability() );
-        
+
         // empirical cummulative probability function
         addFunction( new Func_posteriorPredictiveProbability()  );
 
 
  		/* Statistics functions (in folder "functions/statistics") */
+
+    // helpers for Markov Random Field models
+        addFunction( new Func_assembleContinuousMRF( )     );
 
 		// some helper statistics for the DPP distribution
         addFunction( new Func_dppConcFromMean( )     );

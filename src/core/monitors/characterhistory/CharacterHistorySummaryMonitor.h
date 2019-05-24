@@ -287,8 +287,8 @@ std::string RevBayesCore::CharacterHistorySummaryMonitor<charType>::buildIterati
         // anagenetic events along branch
         if (has_anagenetic) {
             std::vector<CharacterEvent*> next_states = start_states;
-            std::multiset<CharacterEvent*, CharacterEventCompare>::iterator it;
-            for (it = h.begin(); it != h.end(); it++)
+            std::multiset<CharacterEvent*, CharacterEventCompare>::reverse_iterator it;
+            for (it = h.rbegin(); it != h.rend(); it++)
             {
                 std::stringstream curr_state_ss;
                 std::stringstream next_state_ss;
@@ -318,7 +318,9 @@ std::string RevBayesCore::CharacterHistorySummaryMonitor<charType>::buildIterati
                 
                 // get child states
                 TopologyNode* child = &n->getChild(i);
-                const std::vector<CharacterEvent*>& child_states = p->getHistory( *child ).getChildCharacters();
+                const BranchHistory& bh_child = p->getHistory( *child );
+                
+                const std::vector<CharacterEvent*>& child_states = bh_child.getParentCharacters();
                 std::stringstream child_state_ss;
                 
                 // make child state string
@@ -440,6 +442,7 @@ void RevBayesCore::CharacterHistorySummaryMonitor<charType>::printHeader()
     outStream << separator << "parent_index";
     outStream << separator << "child1_index";
     outStream << separator << "child2_index";
+    outStream << std::endl;
 
 }
 
