@@ -40,7 +40,7 @@ endif
 
 boost_modules = [ 'regex',
                   'program_options',
-                  'thread','signals',
+                  'thread',
                   'system',
                   'filesystem',
                   'date_time',
@@ -53,7 +53,6 @@ boost = dependency('boost', modules : boost_modules, static: want_static)
 
 rb_name = 'rb'
 if get_option('mpi')
-  rb_name += '-mpi'
   add_project_arguments(['-DRB_MPI'], language: 'cpp')
   mpi = dependency('mpi', language: 'cpp', static: want_static)
 else
